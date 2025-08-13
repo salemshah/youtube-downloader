@@ -67,7 +67,7 @@ jobs:
 
       - name: Upload docker-compose (prod)
         run: |
-          scp docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/docker-compose.yml
+          scp docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/docker-compose.yml
 
       - name: Upload Nginx config
         run: |

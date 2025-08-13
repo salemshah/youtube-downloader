@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    container_name: downloader_web
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - .:/app               # live code reload
+      - downloads:/app/downloads  # persist downloads
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('127.0.0.1',8000)); print('ok')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  downloads:
+

@@ -1,0 +1,21 @@
+services:
+  web:
+    image: salemshah/youtub-downloader:latest
+    platform: "linux/amd64"        # <-- add this on an x86_64 VPS
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8001:8000"                # Nginx proxies to 127.0.0.1:8001
+    volumes:
+      - downloads:/app/downloads   # keep only the persistent data
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('127.0.0.1',8000)); print('ok')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  downloads:

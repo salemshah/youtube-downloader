@@ -1,0 +1,5 @@
+sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+sudo cp /root/youtub-downloader/nginx/conf.d/default.conf /etc/nginx/sites-available/y-downloader.duckdns.org
+sudo rm -f /etc/nginx/sites-enabled/y-downloader.duckdns.org
+sudo ln -sf /etc/nginx/sites-available/y-downloader.duckdns.org /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx

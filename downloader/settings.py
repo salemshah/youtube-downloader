@@ -24,19 +24,21 @@ SECRET_KEY = 'django-insecure-qm&xw*-r@_)^$xzp@l+qd-mbl2&@fm_$j3*2hl7@=@h$k0+8x_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["y-downloader.duckdns.org", "www.y-downloader.duckdns.org", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["y-downloader.duckdns.org", "www.y-download.netlify.app" ,"www.y-downloader.duckdns.org", "y-download.netlify.app" ,"localhost", "127.0.0.1"]
 
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://y-downloader.duckdns.org",
+    "https://y-download.netlify.app"
 ]
 
 # For Django 4+ when using HTTPS behind Nginx
 CSRF_TRUSTED_ORIGINS = [
     "https://y-downloader.duckdns.org",
     "https://www.y-downloader.duckdns.org",
+    "https://y-download.netlify.app",
 ]
 
 

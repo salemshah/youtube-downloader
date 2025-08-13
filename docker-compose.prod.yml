@@ -1,7 +1,6 @@
 services:
   web:
     image: salemshah/youtub-downloader:latest
-    platform: "linux/amd64"        # <-- add this on an x86_64 VPS
     restart: unless-stopped
     env_file: .env
     ports:

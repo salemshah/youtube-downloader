@@ -1,10 +1,29 @@
-import os, uuid, shutil, subprocess, sys
-from django.http import FileResponse
+import os, uuid, shutil, subprocess
+from django.http import StreamingHttpResponse
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
 
-DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "downloads")
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
+
+def _stream_file_then_delete(path, chunk_size=1024 * 64):
+    """Yield file chunks; always delete the file when done or if client disconnects."""
+    f = open(path, "rb")
+    try:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        try:
+            f.close()
+        finally:
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
 
 @api_view(['POST'])
 def download_yt(request):
@@ -19,7 +38,6 @@ def download_yt(request):
     if not shutil.which("yt-dlp"):
         return Response({"error": "yt-dlp not found in PATH"}, status=500)
 
-    # make a deterministic temp filename (avoid guessing the yt-dlp title)
     tmp_id = uuid.uuid4().hex
     out_path = os.path.join(DOWNLOAD_DIR, f"{tmp_id}.mp4")
 
@@ -28,7 +46,7 @@ def download_yt(request):
         "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]",
         "--merge-output-format", "mp4",
         "-o", out_path,
-        url
+        url,
     ]
 
     try:
@@ -36,7 +54,14 @@ def download_yt(request):
     except subprocess.CalledProcessError as e:
         return Response({"error": "Download failed", "detail": str(e)}, status=500)
 
-    # stream file back to client as a download
-    resp = FileResponse(open(out_path, "rb"), as_attachment=True, filename=os.path.basename(out_path))
-    # (optional) delete after sending? risky while streaming; safer to clean with a cron/job later
+    # Prepare headers BEFORE streaming/deleting
+    filename = os.path.basename(out_path)
+    try:
+        file_size = os.path.getsize(out_path)
+    except OSError:
+        return Response({"error": "File not found after download"}, status=500)
+
+    resp = StreamingHttpResponse(_stream_file_then_delete(out_path), content_type="video/mp4")
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    resp["Content-Length"] = str(file_size)  # helps browsers show progress
     return resp

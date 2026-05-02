@@ -1,13 +1,27 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   web:
     build: .
     container_name: downloader_web
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
-      - .:/app               # live code reload
-      - downloads:/app/downloads  # persist downloads
+      - .:/app               # live code reload in development
+    depends_on:
+      redis:
+        condition: service_healthy
     command: >
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
@@ -16,6 +30,3 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-
-volumes:
-  downloads:

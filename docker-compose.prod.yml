@@ -1,20 +1,33 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   web:
     image: salemshah/youtub-downloader:latest
     restart: unless-stopped
     env_file: .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     ports:
-      - "8001:8000"                # Nginx proxies to 127.0.0.1:8001
-    volumes:
-      - downloads:/app/downloads   # keep only the persistent data
+      - "8001:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+             gunicorn downloader.wsgi:application
+             --bind 0.0.0.0:8000
+             --workers 4
+             --timeout 700"
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('127.0.0.1',8000)); print('ok')"]
       interval: 10s
       timeout: 3s
       retries: 5
-
-volumes:
-  downloads:

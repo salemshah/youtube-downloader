@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import download_yt
+from .views import extract, download_high_quality, serve_download
 
 urlpatterns = [
-    path('download-yt/', download_yt, name='download_yt'),
+    path('extract/',                          extract,               name='extract'),
+    path('download-high-quality/',            download_high_quality, name='download_high_quality'),
+    path('serve-download/<str:token>/',       serve_download,        name='serve_download'),
 ]
